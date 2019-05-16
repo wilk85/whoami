@@ -34,10 +34,6 @@ node {
 
     // Roll out to production
     case "master":
-        sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
-        withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) 
-          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret mysecret || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
-        } 
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./services/")
