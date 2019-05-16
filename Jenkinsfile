@@ -21,6 +21,10 @@ node {
   switch (env.BRANCH_NAME) {
     // Roll out to canary environment
     case "canary":
+        sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
+        withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
+        }
         // Change deployed image in canary to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./canary/*.yaml")
         sh("kubectl --kubeconfig ~admin12/.kube/config --namespace=canary apply -f ./services/")
@@ -32,7 +36,7 @@ node {
     case "master":
         sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
         withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry acr-auth --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
+          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
         }
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
@@ -44,7 +48,7 @@ node {
       case "release":
         sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
         withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry acr-auth --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
+          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
         }
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
@@ -58,7 +62,7 @@ node {
         // Create namespace if it doesn't exist
         sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
         withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry acr-auth --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
+          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
         }  
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./dev/*.yaml")
         sh("kubectl create ns canary")
