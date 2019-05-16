@@ -24,8 +24,8 @@ node {
         // Change deployed image in canary to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./canary/*.yaml")
         sh("kubectl create ns production")
-        sh("kubectl --namespace=canary apply -f ./services/")
-        sh("kubectl --namespace=canary apply -f ./canary/")
+        sh("kubectl --kubeconfig ~admin12/.kube/config --namespace=canary apply -f ./services/")
+        sh("kubectl --kubeconfig ~admin12/.kube/config --namespace=canary apply -f ./canary/")
         sh("echo http://`kubectl --namespace=production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
 
@@ -34,8 +34,8 @@ node {
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
         sh("kubectl create ns production")
-        sh("kubectl --namespace=canary apply -f ./services/")
-        sh("kubectl --namespace=canary apply -f ./production/")
+        sh("kubectl --kubeconfig ~admin12/.kube/config --namespace=canary apply -f ./services/")
+        sh("kubectl --kubeconfig ~admin12/.kube/config --namespace=canary apply -f ./production/")
         sh("echo http://`kubectl --namespace=psrestapi-production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
 
@@ -48,7 +48,7 @@ node {
         }  
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./dev/*.yaml")
         sh("kubectl create ns canary")
-        sh("kubectl --namespace=${appName}-${env.BRANCH_NAME} apply -f whoami/dev/")
+        sh("kubectl --kubeconfig ~admin12/.kube/config --namespace=${appName}-${env.BRANCH_NAME} apply -f whoami/dev/")
         echo 'To access your environment run `kubectl proxy`'
         echo "Then access your service via http://localhost:8001/api/v1/namespaces/${appName}-${env.BRANCH_NAME}/services/${appName}:80/proxy/"     
     }
