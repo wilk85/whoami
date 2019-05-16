@@ -1,0 +1,47 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: dockerimage-dev
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      app: dockerimage
+  template:
+    metadata:
+      name: dockerimage
+      labels:
+        app: dockerimage
+        env: dev
+    spec:
+      containers:
+      - name: dockerimage
+        image: acrdemo66.azurecr.io/dockerimage:v1.0
+        resources:
+          limits:
+            memory: "300Mi"
+            cpu: "100m"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+      imagePullSecrets:
+      - name: acr-auth
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dockerimage
+  labels:
+    name: dockerimage
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: dockerimage
+
