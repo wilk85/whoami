@@ -24,8 +24,8 @@ node {
         // Change deployed image in canary to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./whoami/canary/*.yaml")
         sh("kubectl create ns production")
-        sh("kubectl --namespace=production apply -f whoami/services/")
-        sh("kubectl --namespace=production apply -f whoami/canary/")
+        sh("kubectl --namespace=dev apply -f whoami/services/")
+        sh("kubectl --namespace=dev apply -f whoami/canary/")
         sh("echo http://`kubectl --namespace=production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
 
@@ -34,8 +34,8 @@ node {
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./whoami/production/*.yaml")
         sh("kubectl create ns production")
-        sh("kubectl --namespace=production apply -f whoami/services/")
-        sh("kubectl --namespace=production apply -f whoami/production/")
+        sh("kubectl --namespace=dev apply -f whoami/services/")
+        sh("kubectl --namespace=dev apply -f whoami/production/")
         sh("echo http://`kubectl --namespace=psrestapi-production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
 
@@ -47,7 +47,7 @@ node {
           sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret acr-auth || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry acr-auth --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
         }  
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./whoami/dev/*.yaml")
-        sh("kubectl create ns production")
+        sh("kubectl create ns dev")
         sh("kubectl --namespace=${appName}-${env.BRANCH_NAME} apply -f whoami/dev/")
         echo 'To access your environment run `kubectl proxy`'
         echo "Then access your service via http://localhost:8001/api/v1/namespaces/${appName}-${env.BRANCH_NAME}/services/${appName}:80/proxy/"     
