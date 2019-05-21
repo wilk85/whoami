@@ -21,35 +21,35 @@ node {
   switch (env.BRANCH_NAME) {
     // Roll out to canary environment
     case "canary":
-        sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
-        withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret mysecret || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
-        } 
+        sh("kubectl get ns production || sudo -s kubectl create ns production")
         // Change deployed image in canary to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./canary/*.yaml")
-        sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./services/")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./canary/")
         sh("echo http://`kubectl --namespace=production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
 
     // Roll out to production
     case "master":
+        sh("kubectl get ns production || sudo -s kubectl create ns production")
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
-        sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./services/")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./production/")
         sh("echo http://`kubectl --namespace=psrestapi-production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
     
     case "release":
-        sh("kubectl get ns ${appName}-${env.BRANCH_NAME} || kubectl create ns ${appName}-${env.BRANCH_NAME}")
-        withCredentials([usernamePassword(credentialsId: 'acr_auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh "kubectl -n ${appName}-${env.BRANCH_NAME} get secret mysecret || kubectl --namespace=${appName}-${env.BRANCH_NAME} create secret docker-registry secret --docker-server ${acr} --docker-username $USERNAME --docker-password $PASSWORD"
-        } 
+        sh("kubectl get ns production || sudo -s kubectl create ns production")
         // Change deployed image in master to the one we just built
-        sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
-        sh("sudo -skubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./services/")
-        sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./production/")
+        sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./release/*.yaml")
+        sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./release/")
+        sh("echo http://`kubectl --namespace=psrestapi-production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
+        break
+      
+    case "dev":
+        sh("kubectl get ns production || sudo -s kubectl create ns production")
+        // Change deployed image in master to the one we just built
+        sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./release/*.yaml")
+        sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./dev/")
         sh("echo http://`kubectl --namespace=psrestapi-production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
         break
 
