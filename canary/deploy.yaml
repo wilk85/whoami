@@ -23,7 +23,7 @@ spec:
         - containerPort: 8000
         readinessProbe:
           httpGet:
-            path: /healthz
+            path: /health
             port: 8000
       imagePullSecrets:
       - name: secret
