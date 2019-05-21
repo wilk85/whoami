@@ -4,6 +4,7 @@ node {
   def imageName = "${acr}/${appName}"
   def imageTag = "${imageName}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
   def appRepo = "acrdemo66.azurecr.io/dockerimage:v1.0"
+  def nSpace = "production"
 
   checkout scm
   
@@ -21,7 +22,7 @@ node {
   switch (env.BRANCH_NAME) {
     // Roll out to canary environment
     case "canary":
-        sh("kubectl get ns production || sudo -s kubectl create ns production")
+        sh("kubectl get ns ${nSpace} || sudo -s kubectl create ns ${nSpace}")
         // Change deployed image in canary to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./canary/*.yaml")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./canary/")
@@ -30,7 +31,7 @@ node {
 
     // Roll out to production
     case "master":
-        sh("kubectl get ns production || sudo -s kubectl create ns production")
+        sh("kubectl get ns ${nSpace} || sudo -s kubectl create ns ${nSpace}")
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./production/*.yaml")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./production/")
@@ -38,7 +39,7 @@ node {
         break
     
     case "release":
-        sh("kubectl get ns production || sudo -s kubectl create ns production")
+        sh("kubectl get ns ${nSpace} || sudo -s kubectl create ns ${nSpace}")
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./release/*.yaml")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./release/")
@@ -46,7 +47,7 @@ node {
         break
       
     case "dev":
-        sh("kubectl get ns production || sudo -s kubectl create ns production")
+        sh("kubectl get ns ${nSpace} || sudo -s kubectl create ns ${nSpace}")
         // Change deployed image in master to the one we just built
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./release/*.yaml")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=production apply -f ./dev/")
