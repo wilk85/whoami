@@ -18,7 +18,6 @@ node {
                 }
   }
 
-
  stage ("Deploy Application on Azure Kubernetes Service")
  {
   switch (env.BRANCH_NAME) {
@@ -26,6 +25,7 @@ node {
     case "canary":
         sh("kubectl get ns ${nSpace1} || sudo -s kubectl create ns ${nSpace1}")
         // Change deployed image in canary to the one we just built
+        sh("kubectl --namespace=${nSpace1} apply -f ./services/")
         sh("sed -i.bak 's#${appRepo}#${imageTag}#' ./canary/*.yaml")
         sh("sudo -s kubectl --kubeconfig ~admin12/.kube/config --namespace=${nSpace1} apply -f ./canary/")
         sh("echo http://`kubectl --namespace=production get service/${appName} --output=json | jq -r '.status.loadBalancer.ingress[0].ip'` > ${appName}")
